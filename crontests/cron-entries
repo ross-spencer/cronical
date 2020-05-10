@@ -1,0 +1,58 @@
+# Test file that mimics crontab.
+#
+# Sensors indicate no shuttle or other ships in this sector. According to
+# coordinates, we have traveled 7,000 light years and are located near the
+# system J-25. Tractor beam released, sir.
+#
+# Force field maintaining our hull integrity. Damage report? Sections 27, 28
+# and 29 on decks four, five and six destroyed. Without our shields, at this
+# range it is probable a photon detonation could destroy the Enterprise.
+#
+# For more information see http://github.com/ross-spencer/cronical
+#
+# Long-form:
+#
+# minute hour day-of-month month day-of-week command
+#
+# Short-form:
+#
+# m h dom mon dow command
+
+# This runs a command at 4:10 PM PDT/PST.
+10 16 * * * echo "test one"
+
+# This runs a command at 2:00 AM PDT/PST on Saturday.
+0 2 * * 6 echo "test two"
+
+# This runs at midnight on New Years Day (January 1st).
+0 0 1 1 0 echo "happy new year!"
+
+# Top of every hour.
+0 * * * * echo "test three"
+
+# Every 15 minutes.
+*/15 * * * * echo "test four"
+
+# Deliberately broken.
+0 π * * * echo "test three"
+
+# Every 30 minutes.
+*/30 * * * * echo "do not echo" 1&2> /dev/null
+
+# Every 10 minutes.
+*/10 * * * * echo "test five"
+
+# At midnight, 2am, and 4am
+* 0,2,4 * * * echo "test six"
+
+# Every 1 hour.
+* */1 * * * echo "test seven"
+
+# February 31.
+* * 31 2 * echo "test eight"
+
+# 10th minute of every hour in October.
+10 * * 10 * echo "test nine"
+
+# Null.
+* * * * * echo "test ten"

@@ -60,5 +60,5 @@
 # This runs at midnight on New Years Day (January 1st). If it's a Monday.
 0 0 1 JAN MON echo "happy new year!"
 
-# This runs at midnight on New Years Day (January 1st). If it's a Monday.
+# This runs at midnight on New Years Day (January 1st). If it's a Sunday.
 0 0 1 1 SUN echo "happy new year!"

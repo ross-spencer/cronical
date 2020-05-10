@@ -101,6 +101,13 @@ func TestParse(t *testing.T) {
 
 }
 
+func TestToIcal(t *testing.T) {
+	for _, cron := range cronResults {
+		cron.ToIcal()
+		break
+	}
+}
+
 func TestToDates(t *testing.T) {
 	for _, cron := range cronResults {
 		fmt.Println(cron.ToDates())

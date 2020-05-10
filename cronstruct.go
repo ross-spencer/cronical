@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/arran4/golang-ical"
 )
 
 /*Cron describes the structure of a cron line in crontab.
@@ -188,7 +190,21 @@ func (c *Cron) ToDates() string {
 
 // ToIcal ...
 func (c *Cron) ToIcal() {
-	// Output to ICAL.
+	// Create a calendar.
+	cal := ics.NewCalendar()
+	cal.SetProductId(version())
+	// Add events one by one to calendar.
+	event := cal.AddEvent("test")
+	event.SetCreatedTime(time.Now())
+	event.SetDtStampTime(time.Now())
+	event.SetModifiedAt(time.Now())
+	event.SetStartAt(time.Now())
+	event.SetEndAt(time.Now())
+	event.SetSummary("cron")
+	event.SetLocation("ASRV-01")
+	event.SetDescription("Execute command...")
+	event.SetOrganizer("sender@domain", ics.WithCN("This Machine"))
+	fmt.Println(cal.Serialize())
 }
 
 // ToCron ...

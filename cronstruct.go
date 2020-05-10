@@ -36,13 +36,37 @@ type Cron struct {
 	Command string // Command for cron to run.
 }
 
-var limit = 10
+const timeFormat = "2006-01-02T15:04"
+
+var limit = 2
 
 func (c *Cron) null() bool {
 	if len(c.Mon) == 0 && len(c.Dom) == 0 && len(c.Hrs) == 0 && len(c.Mins) == 0 && len(c.Dow) == 0 {
 		return true
 	}
 	return false
+}
+
+func (c *Cron) getCronLen() int {
+	// Return the number of possible entries we can create from one single
+	// line of cron.
+	l := 1
+	if len(c.Mon) > 1 {
+		l += len(c.Mon) - 1
+	}
+	if len(c.Dom) > 1 {
+		l += len(c.Dom) - 1
+	}
+	if len(c.Hrs) > 1 {
+		l += len(c.Hrs) - 1
+	}
+	if len(c.Mins) > 1 {
+		l += len(c.Mins) - 1
+	}
+	if len(c.Dow) > 1 {
+		l += len(c.Dow) - 1
+	}
+	return l
 }
 
 func (c *Cron) anyR() bool {
@@ -52,24 +76,6 @@ func (c *Cron) anyR() bool {
 		return false
 	}
 	return true
-}
-
-func (c *Cron) setDefaults() {
-	if len(c.Mon) == 0 {
-		c.Mon = append(c.Mon, 0)
-	}
-	if len(c.Dom) == 0 {
-		c.Dom = append(c.Dom, 0)
-	}
-	if len(c.Hrs) == 0 {
-		c.Hrs = append(c.Hrs, 0)
-	}
-	if len(c.Mins) == 0 {
-		c.Mins = append(c.Mins, 0)
-	}
-	if len(c.Dow) == 0 {
-		c.Dow = append(c.Dow, 0)
-	}
 }
 
 func (c *Cron) toRepeatingDates() string {
@@ -82,12 +88,89 @@ func (c *Cron) toSpecificDates() string {
 	//
 	// Fields: m h dom mon dow command
 	//
-	c.setDefaults()
-	date := time.Now()
-	for i := 0; i < limit; i++ {
-		// Create X entries...
+	// Work backwards from command, and calculate increments (big-endian)
+	// processing.
+
+	t := getTime()
+	ts := []time.Time{}
+
+	for i := 0; i < limit*c.getCronLen(); i++ {
+		ts = append(ts, t)
 	}
-	return fmt.Sprintf("Return specific dates: %s", date)
+
+	// Hours and minutes are going to be consistent across entries. Set those
+	// here.
+	if len(c.Hrs) > 0 {
+		idx := 0
+		for i := 0; i < len(ts); i += len(c.Hrs) {
+			for _, val := range c.Hrs {
+				ts[idx] = setHours(val, ts[idx])
+				idx++
+			}
+		}
+		// TODO: Add a day so return is on this hour, on said say.
+	}
+	if len(c.Mins) > 0 {
+		idx := 0
+		for i := 0; i < len(ts); i += len(c.Mins) {
+			for _, val := range c.Mins {
+				ts[idx] = setMins(val, ts[idx])
+				idx++
+			}
+		}
+		// TODO: Add an hour so return is on the hour.
+	}
+
+	// The interplay between the big-endian values is more difficult. For
+	// example, setting a DoW and DoM is like setting a conditional.
+	//
+	// E.g. Run on 1 January, if 1 January is also a Monday.
+	//
+
+	var exceptionDow = false
+
+	if len(c.Dow) > 0 {
+		idx := 0
+		for i := 0; i < len(ts); i += len(c.Dow) {
+			for _, val := range c.Dow {
+				ts[idx] = setDow(val, ts[idx])
+				// Set the next value relative to this one, so we're not going
+				// back in time
+				if idx+1 < len(ts) {
+					ts[idx+1] = ts[idx]
+				}
+				idx++
+			}
+		}
+		exceptionDow = true
+	}
+
+	if len(c.Mon) > 0 {
+		for _, _ = range c.Mon {
+			for _, _ = range ts {
+				// Set month.
+			}
+		}
+	}
+
+	if len(c.Dom) > 0 {
+		for _, _ = range c.Dom {
+			for _, _ = range ts {
+				// Set Day of month.
+				//
+				if exceptionDow == true {
+					// if exceptionDOW then day of month must also be equal,
+					// else add one year until we find that day.
+				}
+			}
+		}
+	}
+
+	for _, v := range ts {
+		fmt.Printf("Generated specific date: %s %s\n", v.Format(timeFormat), c.Command)
+	}
+
+	return fmt.Sprintf("---")
 }
 
 // ToDates ...

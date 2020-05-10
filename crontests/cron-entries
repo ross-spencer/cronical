@@ -19,13 +19,13 @@
 # m h dom mon dow command
 
 # This runs a command at 4:10 PM PDT/PST.
-10 16 * * * echo "test one"
+10,15 16 * * * echo "test one"
 
-# This runs a command at 2:00 AM PDT/PST on Saturday.
-0 2 * * 6 echo "test two"
+# This runs a command at 2:00 AM PDT/PST on Friday and Saturday.
+0 2 * * 5,6 echo "test two"
 
 # This runs at midnight on New Years Day (January 1st).
-0 0 1 1 0 echo "happy new year!"
+0 0 1 1 * echo "happy new year!"
 
 # Top of every hour.
 0 * * * * echo "test three"
@@ -56,3 +56,9 @@
 
 # Null.
 * * * * * echo "test ten"
+
+# This runs at midnight on New Years Day (January 1st). If it's a Monday.
+0 0 1 JAN MON echo "happy new year!"
+
+# This runs at midnight on New Years Day (January 1st). If it's a Monday.
+0 0 1 1 SUN echo "happy new year!"

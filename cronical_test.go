@@ -15,16 +15,30 @@ const crontabFile = "cron-entries"
 var crontabFixture string
 
 // Errors anticipated from parsing the cron fixtures.
-var errResults = [...]string{"Time pattern is not implemented: π"}
+var errResults = [...]string{
+	"Time pattern is not implemented: π",
+
+	// TODO: These are only temporarily not implemented. To fix we need to:
+	//
+	// 1. Create regex patterns to match MON, DAY.
+	// 2. Map the values back into integers for easy of use in code.
+	//
+	// NB. That would make conversion from cron -> cronical non-reversible, but
+	// that might be okay, e.g. MON -> cronical ;; cronical -> cron would
+	// return 1.
+	//
+	"Time pattern is not implemented: JAN",
+	"Time pattern is not implemented: SUN",
+}
 
 // cron results anticipated from parsing the cron fixtures.
 //
 // Fields: m h dom mon dow command
 //
 var cronResults = [...]Cron{
-	Cron{[]int{10}, false, []int{16}, false, []int{}, false, []int{}, false, []int{}, false, "echo \"test one\""},
-	Cron{[]int{0}, false, []int{2}, false, []int{}, false, []int{}, false, []int{6}, false, "echo \"test two\""},
-	Cron{[]int{0}, false, []int{0}, false, []int{1}, false, []int{1}, false, []int{0}, false, "echo \"happy new year!\""},
+	Cron{[]int{10, 15}, false, []int{16}, false, []int{}, false, []int{}, false, []int{}, false, "echo \"test one\""},
+	Cron{[]int{0}, false, []int{2}, false, []int{}, false, []int{}, false, []int{5, 6}, false, "echo \"test two\""},
+	Cron{[]int{0}, false, []int{0}, false, []int{1}, false, []int{1}, false, []int{}, false, "echo \"happy new year!\""},
 	Cron{[]int{0}, false, []int{}, false, []int{}, false, []int{}, false, []int{}, false, "echo \"test three\""},
 	Cron{[]int{15}, true, []int{}, false, []int{}, false, []int{}, false, []int{}, false, "echo \"test four\""},
 	Cron{[]int{30}, true, []int{}, false, []int{}, false, []int{}, false, []int{}, false, "echo \"do not echo\" 1&2> /dev/null"},
@@ -84,6 +98,7 @@ func TestParse(t *testing.T) {
 			t.Errorf("Cron results aren't equivalent:\n%+v,\n%+v", cron, cronResults[idx])
 		}
 	}
+
 }
 
 func TestToDates(t *testing.T) {

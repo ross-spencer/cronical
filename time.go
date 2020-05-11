@@ -29,3 +29,11 @@ func setDow(day int, t time.Time) time.Time {
 	}
 	return t
 }
+
+func setMon(mon int, t time.Time) time.Time {
+	return time.Date(t.Year(), time.Month(mon), t.Day(), t.Hour(), t.Minute(), 00, 00, time.UTC)
+}
+
+func setDom(dom int, t time.Time) time.Time {
+	return time.Date(t.Year(), t.Month(), dom, t.Hour(), t.Minute(), 00, 00, time.UTC)
+}

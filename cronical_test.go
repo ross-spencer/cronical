@@ -45,7 +45,7 @@ var cronResults = [...]Cron{
 	Cron{[]int{10}, true, []int{}, false, []int{}, false, []int{}, false, []int{}, false, "echo \"test five\""},
 	Cron{[]int{}, false, []int{0, 2, 4}, false, []int{}, false, []int{}, false, []int{}, false, "echo \"test six\""},
 	Cron{[]int{}, false, []int{1}, true, []int{}, false, []int{}, false, []int{}, false, "echo \"test seven\""},
-	Cron{[]int{}, false, []int{}, false, []int{31}, false, []int{2}, false, []int{}, false, "echo \"test eight\""},
+	Cron{[]int{}, false, []int{}, false, []int{31}, false, []int{2, 8}, false, []int{}, false, "echo \"test eight\""},
 	Cron{[]int{10}, false, []int{}, false, []int{}, false, []int{10}, false, []int{}, false, "echo \"test nine\""},
 	Cron{[]int{}, false, []int{}, false, []int{}, false, []int{}, false, []int{}, false, "echo \"test ten\""},
 }

@@ -100,8 +100,69 @@ func (c *Cron) toSpecificDates() string {
 		ts = append(ts, t)
 	}
 
-	// Hours and minutes are going to be consistent across entries. Set those
-	// here.
+	// The interplay between the big-endian values is more difficult. For
+	// example, setting a DoW and DoM is like setting a conditional.
+	//
+	// E.g. Run on 1 January, if 1 January is also a Monday.
+	//
+
+	var dowSet = false
+
+	if len(c.Dow) > 0 {
+		idx := 0
+		for i := 0; i < len(ts); i += len(c.Dow) {
+			for _, val := range c.Dow {
+				ts[idx] = setDow(val, ts[idx])
+				// Set the next value relative to this one, so we're not going
+				// back in time.
+				if idx+1 < len(ts) {
+					ts[idx+1] = ts[idx]
+				}
+				idx++
+			}
+		}
+		dowSet = true
+	}
+
+	var monSet = false
+
+	if len(c.Mon) > 0 {
+		idx := 0
+		for i := 0; i < len(ts); i += len(c.Mon) {
+			for _, val := range c.Mon {
+				ts[idx] = setMon(val, ts[idx])
+				// Set the next value relative to this one, so we're not going
+				// back in time.
+				if idx+1 < len(ts) {
+					ts[idx+1] = ts[idx]
+				}
+				idx++
+			}
+		}
+		monSet = true
+	}
+
+	var domSet = false
+
+	if len(c.Dom) > 0 {
+		idx := 0
+		for i := 0; i < len(ts); i += len(c.Dom) {
+			for _, val := range c.Dom {
+				ts[idx] = setDom(val, ts[idx])
+				// Set the next value relative to this one, so we're not going
+				// back in time.
+				if idx+1 < len(ts) {
+					ts[idx+1] = ts[idx]
+				}
+				idx++
+			}
+		}
+		domSet = true
+	}
+
+	// Set hours and minutes last as they'll be more consistently easy to set.
+	var hourSet = false
+
 	if len(c.Hrs) > 0 {
 		idx := 0
 		for i := 0; i < len(ts); i += len(c.Hrs) {
@@ -110,7 +171,13 @@ func (c *Cron) toSpecificDates() string {
 				idx++
 			}
 		}
-		// TODO: Add a day so return is on this hour, on said say.
+
+		// TODO:
+		//
+		// if months and days not set
+		// 		Add a day per loop so return is on this hour each day...
+		//
+		hourSet = true
 	}
 	if len(c.Mins) > 0 {
 		idx := 0
@@ -120,56 +187,25 @@ func (c *Cron) toSpecificDates() string {
 				idx++
 			}
 		}
-		// TODO: Add an hour so return is on the hour.
+		// TODO:
+		//
+		// if months and days and hours are not set
+		// 		Add an hour per loop so return is every hour...
+		//
 	}
 
-	// The interplay between the big-endian values is more difficult. For
-	// example, setting a DoW and DoM is like setting a conditional.
-	//
-	// E.g. Run on 1 January, if 1 January is also a Monday.
-	//
-
-	var exceptionDow = false
-
-	if len(c.Dow) > 0 {
-		idx := 0
-		for i := 0; i < len(ts); i += len(c.Dow) {
-			for _, val := range c.Dow {
-				ts[idx] = setDow(val, ts[idx])
-				// Set the next value relative to this one, so we're not going
-				// back in time
-				if idx+1 < len(ts) {
-					ts[idx+1] = ts[idx]
-				}
-				idx++
-			}
-		}
-		exceptionDow = true
-	}
-
-	if len(c.Mon) > 0 {
-		for _, _ = range c.Mon {
-			for _, _ = range ts {
-				// Set month.
-			}
-		}
-	}
-
-	if len(c.Dom) > 0 {
-		for _, _ = range c.Dom {
-			for _, _ = range ts {
-				// Set Day of month.
-				//
-				if exceptionDow == true {
-					// if exceptionDOW then day of month must also be equal,
-					// else add one year until we find that day.
-				}
-			}
-		}
-	}
+	fmt.Println("---")
 
 	for _, v := range ts {
-		fmt.Printf("Generated specific date: %s %s\n", v.Format(timeFormat), c.Command)
+		fmt.Printf(
+			"Specific date: '%s' dowset: '%t' monset: '%t' dayset: '%t' hourset: '%t' cmd: '%s' \n",
+			v.Format(timeFormat),
+			dowSet,
+			monSet,
+			domSet,
+			hourSet,
+			c.Command,
+		)
 	}
 
 	return fmt.Sprintf("---")
@@ -188,13 +224,10 @@ func (c *Cron) ToDates() string {
 	return c.toSpecificDates()
 }
 
-// ToIcal ...
+// ToIcal will convert cron entries to ical formatted events.
 func (c *Cron) ToIcal() {
-	// Create a calendar.
 	cal := ics.NewCalendar()
-	cal.SetProductId(version())
-	// Add events one by one to calendar.
-	event := cal.AddEvent("test")
+	event := cal.AddEvent("cronical-cron-entry")
 	event.SetCreatedTime(time.Now())
 	event.SetDtStampTime(time.Now())
 	event.SetModifiedAt(time.Now())
@@ -204,7 +237,7 @@ func (c *Cron) ToIcal() {
 	event.SetLocation("ASRV-01")
 	event.SetDescription("Execute command...")
 	event.SetOrganizer("sender@domain", ics.WithCN("This Machine"))
-	fmt.Println(cal.Serialize())
+	fmt.Println(event.Serialize())
 }
 
 // ToCron ...

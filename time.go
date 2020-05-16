@@ -4,8 +4,8 @@ import (
 	"time"
 )
 
-func getTime() time.Time {
-	// Return time set back to midnight.
+func getAndResetTime() time.Time {
+	// Reset time set back to midnight.
 	t := time.Now()
 	t = t.Add(-time.Minute * time.Duration(t.Minute()))
 	t = t.Add(-time.Hour * time.Duration(t.Hour()))
@@ -36,4 +36,14 @@ func setMon(mon int, t time.Time) time.Time {
 
 func setDom(dom int, t time.Time) time.Time {
 	return time.Date(t.Year(), t.Month(), dom, t.Hour(), t.Minute(), 00, 00, time.UTC)
+}
+
+func addDay(t time.Time) time.Time {
+	t = t.Add(time.Hour * 24)
+	return t
+}
+
+func addHour(t time.Time) time.Time {
+	t = t.Add(time.Minute * 60)
+	return t
 }

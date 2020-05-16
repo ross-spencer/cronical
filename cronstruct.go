@@ -93,7 +93,7 @@ func (c *Cron) toSpecificDates() string {
 	// Work backwards from command, and calculate increments (big-endian)
 	// processing.
 
-	t := getTime()
+	t := getAndResetTime()
 	ts := []time.Time{}
 
 	for i := 0; i < limit*c.getCronLen(); i++ {
@@ -171,12 +171,16 @@ func (c *Cron) toSpecificDates() string {
 				idx++
 			}
 		}
-
-		// TODO:
-		//
-		// if months and days not set
-		// 		Add a day per loop so return is on this hour each day...
-		//
+		if !monSet && !domSet {
+			// If months and days are not set, then add a day per loop so
+			// return is on this hour each day.
+			for idx := 1; idx <= len(ts[1:]); idx ++ {
+				ts[idx] = addDay(ts[idx])
+				if idx+1 < len(ts) {
+					ts[idx+1] = ts[idx]
+				}
+			}
+		}
 		hourSet = true
 	}
 	if len(c.Mins) > 0 {
@@ -187,11 +191,16 @@ func (c *Cron) toSpecificDates() string {
 				idx++
 			}
 		}
-		// TODO:
-		//
-		// if months and days and hours are not set
-		// 		Add an hour per loop so return is every hour...
-		//
+		if !monSet && !domSet && !hourSet {
+			// if months and days and hours are not set then add an hour per
+			// loop so return is every hour.
+			for idx := 1; idx <= len(ts[1:]); idx ++ {
+				ts[idx] = addHour(ts[idx])
+				if idx+1 < len(ts) {
+					ts[idx+1] = ts[idx]
+				}
+			}
+		}
 	}
 
 	fmt.Println("---")

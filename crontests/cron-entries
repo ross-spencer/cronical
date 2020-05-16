@@ -18,47 +18,62 @@
 #
 # m h dom mon dow command
 
-# This runs a command at 4:10 PM PDT/PST.
-10,15 16 * * * echo "test one"
+# Run a command at 16:10 and 16:15 every day.
+# Generates 8 cron tasks.
+10,15 20,16 1,20 * * echo "test one (8 tasks)"
 
 # This runs a command at 2:00 AM PDT/PST on Friday and Saturday.
-0 2 * * 5,6 echo "test two"
+# Generates 2 cron tasks.
+0 2 * * 5,6 echo "test two (2 tasks)"
 
 # This runs at midnight on New Years Day (January 1st).
-0 0 1 1 * echo "happy new year!"
+# Generates 1 cron task.
+0 0 1 1 * echo "test three happy new year! (1 task)"
 
 # Top of every hour.
-0 * * * * echo "test three"
+# Generates 1 cron task.
+0 * * * * echo "test four (1 task)"
 
 # Every 15 minutes.
-*/15 * * * * echo "test four"
+# Generates 1 cron task.
+*/15 * * * * echo "test five (1 task)"
 
 # Deliberately broken.
-0 π * * * echo "test three"
+# Generates 0 cron tasks.
+0 π * * * echo "test six (1 task / 1 invalid)"
 
 # Every 30 minutes.
-*/30 * * * * echo "do not echo" 1&2> /dev/null
+# Generates 1 cron task.
+*/30 * * * * echo "test seven (1 task)"
 
 # Every 10 minutes.
-*/10 * * * * echo "test five"
+# Generates 1 cron task.
+*/10 * * * * echo "test eight (1 task)"
 
 # At midnight, 2am, and 4am
-* 0,2,4 * * * echo "test six"
+# Generates 3 cron tasks.
+* 0,2,4 * * * echo "test nine (3 tasks)"
 
 # Every 1 hour.
-* */1 * * * echo "test seven"
+# Generates 1 cron task.
+* */1 * * * echo "test ten (1 task)"
 
-# February 31.
-* * 31 2,8 * echo "test eight"
+# Run Jan, Feb 31, and Aug 31. Feb 30/31 should fail. Jan/Aug 31 shouldn't.
+# Generates 6 cron task.
+* * 30,31 2,8,1 * echo "test eleven (6 tasks / 2 invalid)"
 
 # 10th minute of every hour in October.
-10 * * 10 * echo "test nine"
+# Generates 1 cron task.
+10 * * 10 * echo "test twelve (1 tasks)"
 
 # Null.
-* * * * * echo "test ten"
+# Generates 0 cron task.
+* * * * * echo "test thirteen (0 tasks / cron is null)"
 
 # This runs at midnight on New Years Day (January 1st). If it's a Monday.
-0 0 1 JAN MON echo "happy new year!"
+# Generates 1 cron task.
+0 0 1 JAN MON echo "test fourteen happy new year! (1 task)"
 
 # This runs at midnight on New Years Day (January 1st). If it's a Sunday.
-0 0 1 1 SUN echo "happy new year!"
+# Generates 1 cron task.
+0 0 1 1 SUN echo "test fifteen happy new year! (1 task)"

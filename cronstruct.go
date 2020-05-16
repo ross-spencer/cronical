@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/arran4/golang-ical"
@@ -25,55 +24,36 @@ Fields can also be comma separated. They can also have ranges, but ranges are
 not currently implemented.
 */
 type Cron struct {
-	Mins    []int  // Number of minutes on which to run the command.
+	Mins    int    // Number of minutes on which to run the command.
 	MinsR   bool   // Are the minutes repeated?
-	Hrs     []int  // Hour to run the command.
+	Hrs     int    // Hour to run the command.
 	HrsR    bool   // Is the number of hours repeated?
-	Dom     []int  // Day of the month to run the command?
+	Dom     int    // Day of the month to run the command?
 	DomR    bool   // Is the day of the month repeated?
-	Mon     []int  // Month to run the command.
+	Mon     int    // Month to run the command.
 	MonR    bool   // Is the month repeated?
-	Dow     []int  // Day of the week to run the command.
+	Dow     int    // Day of the week to run the command.
 	DowR    bool   // Are the days of the week repeated?
 	Command string // Command for cron to run.
 }
 
 const timeFormat = "2006-01-02T15:04"
 
-var limit = 2
+var limit = 3
 
 func (c *Cron) null() bool {
-	if len(c.Mon) == 0 && len(c.Dom) == 0 && len(c.Hrs) == 0 && len(c.Mins) == 0 && len(c.Dow) == 0 {
+	if c.Mon == -1 &&
+		c.Dom == -1 &&
+		c.Hrs == -1 &&
+		c.Mins == -1 &&
+		c.Dow == -1 {
 		return true
 	}
 	return false
 }
 
-func (c *Cron) getCronLen() int {
-	// Return the number of possible entries we can create from one single
-	// line of cron.
-	l := 1
-	if len(c.Mon) > 1 {
-		l += len(c.Mon) - 1
-	}
-	if len(c.Dom) > 1 {
-		l += len(c.Dom) - 1
-	}
-	if len(c.Hrs) > 1 {
-		l += len(c.Hrs) - 1
-	}
-	if len(c.Mins) > 1 {
-		l += len(c.Mins) - 1
-	}
-	if len(c.Dow) > 1 {
-		l += len(c.Dow) - 1
-	}
-	return l
-}
-
 func (c *Cron) anyR() bool {
 	// If any repeat field is true, return true, else false.
-	//
 	if !c.MinsR && !c.HrsR && !c.DomR && !c.MonR && !c.DowR {
 		return false
 	}
@@ -85,7 +65,7 @@ func (c *Cron) toRepeatingDates() string {
 	return "Return repeating entries..."
 }
 
-func (c *Cron) toSpecificDates() string {
+func (c *Cron) toSpecificDates() (string, error) {
 	// Process little to big-endian adding data as we go...
 	//
 	// Fields: m h dom mon dow command
@@ -96,141 +76,47 @@ func (c *Cron) toSpecificDates() string {
 	t := getAndResetTime()
 	ts := []time.Time{}
 
-	for i := 0; i < limit*c.getCronLen(); i++ {
+	for i := 0; i < limit; i++ {
 		ts = append(ts, t)
 	}
 
-	// The interplay between the big-endian values is more difficult. For
-	// example, setting a DoW and DoM is like setting a conditional.
-	//
-	// E.g. Run on 1 January, if 1 January is also a Monday.
-	//
-
-	var dowSet = false
-
-	if len(c.Dow) > 0 {
-		idx := 0
-		for i := 0; i < len(ts); i += len(c.Dow) {
-			for _, val := range c.Dow {
-				ts[idx] = setDow(val, ts[idx])
-				// Set the next value relative to this one, so we're not going
-				// back in time.
-				if idx+1 < len(ts) {
-					ts[idx+1] = ts[idx]
-				}
-				idx++
-			}
-		}
-		dowSet = true
+	if c.Dow != -1 {
+		t = setDow(c.Dow, t)
 	}
 
-	var monSet = false
-
-	if len(c.Mon) > 0 {
-		idx := 0
-		for i := 0; i < len(ts); i += len(c.Mon) {
-			for _, val := range c.Mon {
-				ts[idx] = setMon(val, ts[idx])
-				// Set the next value relative to this one, so we're not going
-				// back in time.
-				if idx+1 < len(ts) {
-					ts[idx+1] = ts[idx]
-				}
-				idx++
-			}
-		}
-		monSet = true
+	if c.Mon != -1 {
+		t = setMon(c.Mon, t)
 	}
 
-	var domSet = false
-
-	if len(c.Dom) > 0 {
-		idx := 0
-		for i := 0; i < len(ts); i += len(c.Dom) {
-			for _, val := range c.Dom {
-				ts[idx] = setDom(val, ts[idx])
-				// Set the next value relative to this one, so we're not going
-				// back in time.
-				if idx+1 < len(ts) {
-					ts[idx+1] = ts[idx]
-				}
-				idx++
-			}
+	if c.Dom != -1 {
+		t = setDom(c.Dom, t)
+		if c.Mon != -1 && t.Month() != time.Month(c.Mon) {
+			return "",
+				fmt.Errorf(
+					"Cron entry is invalid, month: '%d', day: '%d'",
+					c.Mon,
+					c.Dom,
+				)
 		}
-		domSet = true
 	}
 
-	// Set hours and minutes last as they'll be more consistently easy to set.
-	var hourSet = false
-
-	if len(c.Hrs) > 0 {
-		idx := 0
-		for i := 0; i < len(ts); i += len(c.Hrs) {
-			for _, val := range c.Hrs {
-				ts[idx] = setHours(val, ts[idx])
-				idx++
-			}
-		}
-		if !monSet && !domSet {
-			// If months and days are not set, then add a day per loop so
-			// return is on this hour each day.
-			for idx := 1; idx <= len(ts[1:]); idx ++ {
-				ts[idx] = addDay(ts[idx])
-				if idx+1 < len(ts) {
-					ts[idx+1] = ts[idx]
-				}
-			}
-		}
-		hourSet = true
+	if c.Hrs != -1 {
+		t = setHours(c.Hrs, t)
 	}
-	if len(c.Mins) > 0 {
-		idx := 0
-		for i := 0; i < len(ts); i += len(c.Mins) {
-			for _, val := range c.Mins {
-				ts[idx] = setMins(val, ts[idx])
-				idx++
-			}
-		}
-		if !monSet && !domSet && !hourSet {
-			// if months and days and hours are not set then add an hour per
-			// loop so return is every hour.
-			for idx := 1; idx <= len(ts[1:]); idx ++ {
-				ts[idx] = addHour(ts[idx])
-				if idx+1 < len(ts) {
-					ts[idx+1] = ts[idx]
-				}
-			}
-		}
+
+	if c.Mins != -1 {
+		t = setMins(c.Mins, t)
 	}
 
 	fmt.Println("---")
 
-	for _, v := range ts {
-		fmt.Printf(
-			"Specific date: '%s' dowset: '%t' monset: '%t' dayset: '%t' hourset: '%t' cmd: '%s' \n",
-			v.Format(timeFormat),
-			dowSet,
-			monSet,
-			domSet,
-			hourSet,
-			c.Command,
-		)
-	}
+	fmt.Printf(
+		"Specific date: '%s' cmd: '%s' \n",
+		t.Format(timeFormat),
+		c.Command,
+	)
 
-	return fmt.Sprintf("---")
-}
-
-// ToDates ...
-func (c *Cron) ToDates() string {
-	if c.null() {
-		return "Do nothing, we have a nil entry..."
-	}
-	if c.anyR() {
-		// Fields repeat, take special action...
-		return c.toRepeatingDates()
-	}
-	// Dates are specific.
-	return c.toSpecificDates()
+	return fmt.Sprintf("---"), nil
 }
 
 // ToIcal will convert cron entries to ical formatted events.
@@ -249,25 +135,32 @@ func (c *Cron) ToIcal() {
 	fmt.Println(event.Serialize())
 }
 
-// ToCron ...
-func (c *Cron) ToCron() {
-	// Output to cron again.
+// ToDates converts cron structures into the next possible date entries in a
+// standard calendar.
+func (c *Cron) ToDates() (string, error) {
+	if c.null() {
+		return "Do nothing, we have a nil entry...", nil
+	}
+	if c.anyR() {
+		// Fields repeat, we need to handle this differently.
+		return c.toRepeatingDates(), nil
+	}
+	return c.toSpecificDates()
 }
 
-func joinInt(is []int, delim string) string {
-	// One-liner: https://stackoverflow.com/a/37533144
-	//
-	return strings.Trim(strings.Join(strings.Fields(fmt.Sprint(is)), delim), "[]")
+// ToCron ...
+func (c *Cron) ToCron() {
+	// Output Cron{} to cron.
 }
 
 func (c Cron) String() string {
 	return fmt.Sprintf(
-		"Minutes: %s (%t)\nHours: %s (%t)\nDay of Month: %s (%t)\nMonth: %s (%t)\nDay of Week: %s (%t)\nCommand: %s",
-		joinInt(c.Mins, ","), c.MinsR,
-		joinInt(c.Hrs, ","), c.HrsR,
-		joinInt(c.Dom, ","), c.DomR,
-		joinInt(c.Mon, ","), c.MonR,
-		joinInt(c.Dow, ","), c.DowR,
+		"Cron entry (Command: '%s'): %d (%t), %d (%t), %d (%t), %d (%t), %d (%t)",
 		c.Command,
+		c.Mins, c.MinsR,
+		c.Hrs, c.HrsR,
+		c.Dom, c.DomR,
+		c.Mon, c.MonR,
+		c.Dow, c.DowR,
 	)
 }

@@ -47,3 +47,7 @@ func addHour(t time.Time) time.Time {
 	t = t.Add(time.Minute * 60)
 	return t
 }
+
+func addYear(t time.Time) time.Time {
+	return time.Date(t.Year()+1, t.Month(), t.Day(), t.Hour(), t.Minute(), 00, 00, time.UTC)
+}

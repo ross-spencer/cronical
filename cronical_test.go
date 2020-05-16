@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"reflect"
 	"testing"
 )
 
@@ -17,16 +16,8 @@ var crontabFixture string
 // Errors anticipated from parsing the cron fixtures.
 var errResults = [...]string{
 	"Time pattern is not implemented: π",
-
-	// TODO: These are only temporarily not implemented. To fix we need to:
-	//
-	// 1. Create regex patterns to match MON, DAY.
-	// 2. Map the values back into integers for easy of use in code.
-	//
-	// NB. That would make conversion from cron -> cronical non-reversible, but
-	// that might be okay, e.g. MON -> cronical ;; cronical -> cron would
-	// return 1.
-	//
+	"Cron entry: '[* * * * *]' is null",
+	// TODO: NOT IMPLEMENTED
 	"Time pattern is not implemented: JAN",
 	"Time pattern is not implemented: SUN",
 }
@@ -35,26 +26,99 @@ var errResults = [...]string{
 //
 // Fields: m h dom mon dow command
 //
-var cronResults = [...]Cron{
-	Cron{[]int{10, 15}, false, []int{16}, false, []int{}, false, []int{}, false, []int{}, false, "echo \"test one\""},
-	Cron{[]int{0}, false, []int{2}, false, []int{}, false, []int{}, false, []int{5, 6}, false, "echo \"test two\""},
-	Cron{[]int{0}, false, []int{0}, false, []int{1}, false, []int{1}, false, []int{}, false, "echo \"happy new year!\""},
-	Cron{[]int{0}, false, []int{}, false, []int{}, false, []int{}, false, []int{}, false, "echo \"test three\""},
-	Cron{[]int{15}, true, []int{}, false, []int{}, false, []int{}, false, []int{}, false, "echo \"test four\""},
-	Cron{[]int{30}, true, []int{}, false, []int{}, false, []int{}, false, []int{}, false, "echo \"do not echo\" 1&2> /dev/null"},
-	Cron{[]int{10}, true, []int{}, false, []int{}, false, []int{}, false, []int{}, false, "echo \"test five\""},
-	Cron{[]int{}, false, []int{0, 2, 4}, false, []int{}, false, []int{}, false, []int{}, false, "echo \"test six\""},
-	Cron{[]int{}, false, []int{1}, true, []int{}, false, []int{}, false, []int{}, false, "echo \"test seven\""},
-	Cron{[]int{}, false, []int{}, false, []int{31}, false, []int{2, 8}, false, []int{}, false, "echo \"test eight\""},
-	Cron{[]int{10}, false, []int{}, false, []int{}, false, []int{10}, false, []int{}, false, "echo \"test nine\""},
-	Cron{[]int{}, false, []int{}, false, []int{}, false, []int{}, false, []int{}, false, "echo \"test ten\""},
+var cronResult01 = []Cron{
+	Cron{10, false, 20, false, 1, false, -1, false, -1, false, "echo \"test one (8 tasks)\""},
+	Cron{15, false, 20, false, 1, false, -1, false, -1, false, "echo \"test one (8 tasks)\""},
+	Cron{10, false, 16, false, 1, false, -1, false, -1, false, "echo \"test one (8 tasks)\""},
+	Cron{15, false, 16, false, 1, false, -1, false, -1, false, "echo \"test one (8 tasks)\""},
+	Cron{10, false, 20, false, 20, false, -1, false, -1, false, "echo \"test one (8 tasks)\""},
+	Cron{15, false, 20, false, 20, false, -1, false, -1, false, "echo \"test one (8 tasks)\""},
+	Cron{10, false, 16, false, 20, false, -1, false, -1, false, "echo \"test one (8 tasks)\""},
+	Cron{15, false, 16, false, 20, false, -1, false, -1, false, "echo \"test one (8 tasks)\""},
 }
+
+var cronResult02 = []Cron{
+	Cron{0, false, 2, false, -1, false, -1, false, 5, false, "echo \"test two (2 tasks)\""},
+	Cron{0, false, 2, false, -1, false, -1, false, 6, false, "echo \"test two (2 tasks)\""},
+}
+
+var cronResult03 = []Cron{
+	Cron{0, false, 0, false, 1, false, 1, false, -1, false, "echo \"test three happy new year! (1 task)\""},
+}
+
+var cronResult04 = []Cron{
+	Cron{0, false, -1, false, -1, false, -1, false, -1, false, "echo \"test four (1 task)\""},
+}
+
+var cronResult05 = []Cron{
+	Cron{15, true, -1, false, -1, false, -1, false, -1, false, "echo \"test five (1 task)\""},
+}
+
+var cronResult06 = []Cron{
+	Cron{30, true, -1, false, -1, false, -1, false, -1, false, "echo \"test seven (1 task)\""},
+}
+
+var cronResult07 = []Cron{
+	Cron{10, true, -1, false, -1, false, -1, false, -1, false, "echo \"test eight (1 task)\""},
+}
+
+var cronResult08 = []Cron{
+	Cron{-1, false, 0, false, -1, false, -1, false, -1, false, "echo \"test nine (3 tasks)\""},
+	Cron{-1, false, 2, false, -1, false, -1, false, -1, false, "echo \"test nine (3 tasks)\""},
+	Cron{-1, false, 4, false, -1, false, -1, false, -1, false, "echo \"test nine (3 tasks)\""},
+}
+
+var cronResult09 = []Cron{
+	Cron{-1, false, 1, true, -1, false, -1, false, -1, false, "echo \"test ten (1 task)\""},
+}
+
+var cronResult10 = []Cron{
+	Cron{-1, false, -1, false, 31, false, 8, false, -1, false, "echo \"test eleven (6 tasks / 2 invalid)\""},
+	Cron{-1, false, -1, false, 30, false, 8, false, -1, false, "echo \"test eleven (6 tasks / 2 invalid)\""},
+	Cron{-1, false, -1, false, 31, false, 1, false, -1, false, "echo \"test eleven (6 tasks / 2 invalid)\""},
+	Cron{-1, false, -1, false, 30, false, 1, false, -1, false, "echo \"test eleven (6 tasks / 2 invalid)\""},
+	Cron{-1, false, -1, false, 31, false, 2, false, -1, false, "echo \"test eleven (6 tasks / 2 invalid)\""},
+	Cron{-1, false, -1, false, 30, false, 2, false, -1, false, "echo \"test eleven (6 tasks / 2 invalid)\""},
+}
+
+var cronResult11 = []Cron{
+	Cron{10, false, -1, false, -1, false, 10, false, -1, false, "echo \"test twelve (1 tasks)\""},
+}
+
+// TODO: NOT IMPLEMENTED
+
+var cronResult12 = []Cron{
+	Cron{0, false, 0, false, 1, false, 1, false, 1, false, "echo \"test fourteen happy new year! (1 task)\""},
+}
+
+var cronResult13 = []Cron{
+	Cron{0, false, 0, false, 1, false, 1, false, 0, false, "echo \"test fifteen happy new year! (1 task)\""},
+}
+
+var allCron = [][]Cron{
+	cronResult01,
+	cronResult02,
+	cronResult03,
+	cronResult04,
+	cronResult05,
+	cronResult06,
+	cronResult07,
+	cronResult08,
+	cronResult09,
+	cronResult10,
+	cronResult11,
+}
+var cronResults = []Cron{}
 
 func init() {
 	crontabFixture = path.Join(fixtures, crontabFile)
+	for _, cron := range allCron {
+		cronResults = append(cronResults, cron...)
+	}
+
 }
 
-func TestParse(t *testing.T) {
+func TestParseAll(t *testing.T) {
 	testCrontab, err := os.Open(crontabFixture)
 	if err != nil {
 		t.Errorf(fmt.Sprintf("%s\n", err))
@@ -66,16 +130,45 @@ func TestParse(t *testing.T) {
 		t.Errorf(fmt.Sprintf("%s\n", err))
 	}
 
-	cronlist, errlist := ParseCrontab(string(crontab))
-	if len(errlist) != len(errResults) {
+	cronList, errList := ParseCrontab(string(crontab))
+
+	// TEST RESULTS
+
+	// Test that the number of results returned is correct.
+	if len(cronList) != len(cronResults) {
+		t.Errorf(
+			"Entries to parse: '%d' is different than expected: '%d'",
+			len(cronList),
+			len(cronResults),
+		)
+	}
+
+	for _, cronL := range cronList {
+		present := false
+		for _, cronR := range cronResults {
+			if cronL == cronR {
+				present = true
+				break
+			}
+		}
+		if !present {
+			t.Errorf("Result not found in set: %+v", cronL)
+		}
+	}
+
+	// TEST ERRORS
+
+	// Test that the number of errors returned is correct.
+	if len(errList) != len(errResults) {
 		t.Errorf(
 			"Expected errors: '%d' are less than expected: '%d'\n",
-			len(errlist),
+			len(errList),
 			len(errResults),
 		)
 	}
 
-	for idx, err := range errlist {
+	// Test that the errors are all the anticipated errors.
+	for idx, err := range errList {
 		if err.Error() != errResults[idx] {
 			t.Errorf(
 				"Error '%s', was not returned as anticipated: '%s'",
@@ -84,21 +177,6 @@ func TestParse(t *testing.T) {
 			)
 		}
 	}
-
-	if len(cronlist) != len(cronResults) {
-		t.Errorf(
-			"Entries to parse: '%d' is different than expected: '%d'",
-			len(cronlist),
-			len(cronResults),
-		)
-	}
-
-	for idx, cron := range cronlist {
-		if !reflect.DeepEqual(cron, cronResults[idx]) {
-			t.Errorf("Cron results aren't equivalent:\n%+v,\n%+v", cron, cronResults[idx])
-		}
-	}
-
 }
 
 func TestToIcal(t *testing.T) {
@@ -110,6 +188,7 @@ func TestToIcal(t *testing.T) {
 
 func TestToDates(t *testing.T) {
 	for _, cron := range cronResults {
-		fmt.Println(cron.ToDates())
+		val, err := cron.ToDates()
+		fmt.Println(val, err)
 	}
 }

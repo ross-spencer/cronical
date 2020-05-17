@@ -65,6 +65,69 @@ func (c *Cron) toRepeatingDates() string {
 	return "Return repeating entries..."
 }
 
+func isSet(flag int) bool {
+	if flag != -1 {
+		return false
+	}
+	return true
+}
+
+func (c *Cron) preProcessIncrement() {
+	// preProcessIncrement lets us know how we need to generate future entries,
+	// i.e. are we running monthly? every x minutes? etc. etc.
+
+	/*
+		Mins    int    // Number of minutes on which to run the command.
+		Hrs     int    // Hour to run the command.
+		Dom     int    // Day of the month to run the command?
+		Mon     int    // Month to run the command.
+		Dow     int    // Day of the week to run the command.
+	*/
+
+	if isSet(c.Mins) && isSet(c.Hrs) {
+		// Hours and minutes set. Run at specific time... Increment by day?
+	}
+
+	if isSet(c.Mins) && !isSet(c.Hrs) {
+		// Increment by an hour. Run at {MINS} past every hour...
+	}
+
+	if !isSet(c.Mins) && isSet(c.Hrs) {
+		// Run at a specific {HRS} each day. Increment by day...?
+	}
+
+	if !isSet(c.Mins) && !isSet(c.Hrs) {
+		// Hours and minutes not set... Cron will run at midnight...
+	}
+
+	if isSet(c.Mon) && isSet(c.Dom) && !isSet(c.Dow) {
+		// Increment by year.
+	}
+
+	if isSet(c.Mon) && isSet(c.Dom) && isSet(c.Dow) {
+		// Increment by year until day of week matches.
+	}
+
+	if isSet(c.Mon) && isSet(c.Dow) && !isSet(c.Dom) {
+		// Run every {DOW} of the month.
+	}
+
+	if isSet(c.Mon) && !isSet(c.Dow) && !isSet(c.Dom) {
+		// Increment by year if nothing else is set. Else run at next increment
+		// during, or each day.
+	}
+
+	if !isSet(c.Mon) && !isSet(c.Dow) && isSet(c.Dom) {
+		// Run every valid day of the month at the correct time of day or
+		// correct increment during the day.
+	}
+
+	if !isSet(c.Mon) && isSet(c.Dow) && !isSet(c.Dom) {
+		// Run every day of the week at the correct time of day or correct
+		// increment during the day.
+	}
+}
+
 func (c *Cron) toSpecificDates() (string, error) {
 	// Process little to big-endian adding data as we go...
 	//
@@ -72,6 +135,9 @@ func (c *Cron) toSpecificDates() (string, error) {
 	//
 	// Work backwards from command, and calculate increments (big-endian)
 	// processing.
+
+	c.preProcessIncrement()
+	return "", nil
 
 	t := getAndResetTime()
 	ts := []time.Time{}

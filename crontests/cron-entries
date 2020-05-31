@@ -1,0 +1,152 @@
+# Test file that mimics crontab.
+#
+# Sensors indicate no shuttle or other ships in this sector. According to
+# coordinates, we have traveled 7,000 light years and are located near the
+# system J-25. Tractor beam released, sir.
+#
+# Force field maintaining our hull integrity. Damage report? Sections 27, 28
+# and 29 on decks four, five and six destroyed. Without our shields, at this
+# range it is probable a photon detonation could destroy the Enterprise.
+#
+# For more information see http://github.com/ross-spencer/cronical
+#
+# Long-form:
+#
+# minute hour day-of-month month day-of-week command
+#
+# Short-form:
+#
+# m h dom mon dow command
+#
+# Natural language description comes from:
+#
+#  * perl /usr/share/doc/cron/examples/crontab2english.pl
+#
+# E.g. $ cat crontests/cron-entires | perl .../crontab2english.pl
+#
+#
+
+# Run: echo "0001"
+# At: 10 and 15 minutes past 8pm and 4pm of the first and 20th of every month.
+#
+# No. primitives: 8.
+#
+10,15 20,16 1,20 * * echo "0001"
+
+# Run: echo "0002"
+# At: 2am every Friday or Saturday.
+#
+# No. primitives: 2.
+#
+0 2 * * 5,6 echo "0002"
+
+# Run: echo "0003"
+# At: Midnight on the first of January.
+#
+# No. primitives 1.
+#
+0 0 1 1 * echo "0003"
+
+# Run: echo "0004"
+# At: 1 minute past every hour of every day.
+#
+# No. primitives 1.
+#
+1 * * * * echo "0004"
+
+# Run: echo "0005"
+# At: Every 15th minute of every hour of every day.
+#
+# No. primitives 1.
+#
+*/15 * * * * echo "0005"
+
+# Invalid: Unparseable bit in parsing of command field 2: "π".
+#
+# No. primitives 0.
+#
+0 π * * * echo "0006"
+
+# Run: echo "0007"
+# At: Every 30th minute of every hour of every day.
+#
+# No. primitives 1.
+#
+*/30 * * * * echo "0007"
+
+# Run: echo "0008"
+# At: Every tenth minute of every hour of every day.
+#
+# No. primitives 1.
+#
+*/10 * * * * echo "0008"
+
+# Run: echo "0009"
+# At: Every minute of midnight, 2am, and 4am of every day.
+#
+# No. primitives 3.
+#
+* 0,2,4 * * * echo "0009"
+
+# Run: echo "0010"
+# At: Every minute of every hour of every day.
+#
+# No. primitives 1.
+#
+* */1 * * * echo "0010"
+
+# Run: echo "0011"
+# At: Every minute of every hour of the 30th and 31st of February, August, and January.
+#
+# No. primitives 4.
+#
+* * 30,31 2,8,1 * echo "0011"
+
+# Run: echo "0012"
+# At: 10 minutes past every hour of every day of October.
+#
+# No. primitives 1.
+#
+10 * * 10 * echo "0012"
+
+# Run: echo "0013"
+# At: Every minute of every hour of every day.
+#
+# No. primitives 1.
+#
+* * * * * echo "0013"
+
+# Run: echo "0014"
+# At: Midnight on the first of -- or every Monday in -- January.
+#
+# No. primitives 2.
+#
+0 0 1 JAN MON echo "0014"
+
+# Run: echo "0015"
+# At: Midnight on the first of -- or every Sunday in -- January.
+#
+# No. primitives 2.
+#
+0 0 1 1 SUN echo "0015"
+
+# Run: echo "0016"
+# At: Every minute of every hour of every day of October.
+#
+# No. primitives 1.
+#
+* * * 10 * echo "0016"
+
+# Run: echo "0017"
+# At: Every minute of every hour of the 20th of -- or every Wednesday in -- July.
+#
+# No. primitives 2.
+#
+* * 20 7 3 echo "0017"
+
+# Run: echo "0018"
+# At: Every minute of every hour of every Thursday in June.
+#
+# No. primitives 1.
+#
+* * * 6 4 echo "0018"

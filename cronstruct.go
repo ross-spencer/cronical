@@ -41,6 +41,10 @@ const timeFormat = "2006-01-02T15:04"
 
 var limit = 3
 
+// TODO: Cron2English.pl reports this as:
+//
+//    * Every minute of / every hour of /every day.
+//
 func (c *Cron) null() bool {
 	if c.Mon == -1 &&
 		c.Dom == -1 &&
@@ -67,9 +71,9 @@ func (c *Cron) toRepeatingDates() string {
 
 func isSet(flag int) bool {
 	if flag != -1 {
-		return false
+		return true
 	}
-	return true
+	return false
 }
 
 func (c *Cron) preProcessIncrement() {
@@ -84,38 +88,65 @@ func (c *Cron) preProcessIncrement() {
 		Dow     int    // Day of the week to run the command.
 	*/
 
+	t := getAndResetTime()
+	// timeSlice := []time.Time{}
+
+	if !isSet(c.Mins) &&
+		!isSet(c.Hrs) {
+		// Hours and minutes not set... Cron will run at midnight...
+	}
+
 	if isSet(c.Mins) && isSet(c.Hrs) {
-		// Hours and minutes set. Run at specific time... Increment by day?
+		// Hours and minutes set. Run at specific time... Increment by day to repeat?
+		t = setHours(c.Hrs, t)
+		t = setMins(c.Mins, t)
 	}
 
 	if isSet(c.Mins) && !isSet(c.Hrs) {
 		// Increment by an hour. Run at {MINS} past every hour...
+		t = setMins(c.Mins, t)
 	}
 
 	if !isSet(c.Mins) && isSet(c.Hrs) {
 		// Run at a specific {HRS} each day. Increment by day...?
-	}
-
-	if !isSet(c.Mins) && !isSet(c.Hrs) {
-		// Hours and minutes not set... Cron will run at midnight...
+		t = setHours(c.Hrs, t)
 	}
 
 	if isSet(c.Mon) && isSet(c.Dom) && !isSet(c.Dow) {
-		// Increment by year.
-	}
+		// Run at a particular day of a particular month. (Increment by year).
+		t = setMon(c.Mon, t)
+		t = setDom(c.Dom, t)
 
-	if isSet(c.Mon) && isSet(c.Dom) && isSet(c.Dow) {
-		// Increment by year until day of week matches.
-	}
+		// TODO: Validate February 30 somewhere around here...
 
-	if isSet(c.Mon) && isSet(c.Dow) && !isSet(c.Dom) {
-		// Run every {DOW} of the month.
 	}
 
 	if isSet(c.Mon) && !isSet(c.Dow) && !isSet(c.Dom) {
 		// Increment by year if nothing else is set. Else run at next increment
 		// during, or each day.
+
+		fmt.Printf(
+			"Specific date: '%s' cmd: '%s' \n",
+			t.Format(timeFormat),
+			c.Command,
+		)
+
 	}
+
+
+	if isSet(c.Mon) && isSet(c.Dom) && isSet(c.Dow) {
+		// Run at a specific day of a specific month that is also a specific day of the week.
+
+		fmt.Println("xxxx 2")
+
+	}
+
+	if isSet(c.Mon) && isSet(c.Dow) && !isSet(c.Dom) {
+		// Run every {DOW} of the month.
+
+		fmt.Println("xxxx 3")
+	}
+
 
 	if !isSet(c.Mon) && !isSet(c.Dow) && isSet(c.Dom) {
 		// Run every valid day of the month at the correct time of day or

@@ -47,7 +47,7 @@ var cronResult03 = []Cron{
 }
 
 var cronResult04 = []Cron{
-	Cron{0, false, -1, false, -1, false, -1, false, -1, false, "echo \"test four (1 task)\""},
+	Cron{1, false, -1, false, -1, false, -1, false, -1, false, "echo \"test four (1 task)\""},
 }
 
 var cronResult05 = []Cron{
@@ -179,16 +179,20 @@ func TestParseAll(t *testing.T) {
 	}
 }
 
+/*
 func TestToIcal(t *testing.T) {
 	for _, cron := range cronResults {
 		cron.ToIcal()
 		break
 	}
 }
+*/
 
+/*
 func TestToDates(t *testing.T) {
 	for _, cron := range cronResults {
 		val, err := cron.ToDates()
 		fmt.Println(val, err)
 	}
 }
+*/

@@ -17,63 +17,136 @@
 # Short-form:
 #
 # m h dom mon dow command
+#
+# Natural language description comes from:
+#
+#  * perl /usr/share/doc/cron/examples/crontab2english.pl
+#
+# E.g. $ cat crontests/cron-entires | perl .../crontab2english.pl
+#
+#
 
-# Run a command at 16:10 and 16:15 every day.
-# Generates 8 cron tasks.
-10,15 20,16 1,20 * * echo "test one (8 tasks)"
+# Run: echo "0001"
+# At: 10 and 15 minutes past 8pm and 4pm of the first and 20th of every month.
+#
+# No. primitives: 8.
+#
+10,15 20,16 1,20 * * echo "0001"
 
-# This runs a command at 2:00 AM PDT/PST on Friday and Saturday.
-# Generates 2 cron tasks.
-0 2 * * 5,6 echo "test two (2 tasks)"
+# Run: echo "0002"
+# At: 2am every Friday or Saturday.
+#
+# No. primitives: 2.
+#
+0 2 * * 5,6 echo "0002"
 
-# This runs at midnight on New Years Day (January 1st).
-# Generates 1 cron task.
-0 0 1 1 * echo "test three happy new year! (1 task)"
+# Run: echo "0003"
+# At: Midnight on the first of January.
+#
+# No. primitives 1.
+#
+0 0 1 1 * echo "0003"
 
-# Top of every hour.
-# Generates 1 cron task.
-0 * * * * echo "test four (1 task)"
+# Run: echo "0004"
+# At: 1 minute past every hour of every day.
+#
+# No. primitives 1.
+#
+1 * * * * echo "0004"
 
-# Every 15 minutes.
-# Generates 1 cron task.
-*/15 * * * * echo "test five (1 task)"
+# Run: echo "0005"
+# At: Every 15th minute of every hour of every day.
+#
+# No. primitives 1.
+#
+*/15 * * * * echo "0005"
 
-# Deliberately broken.
-# Generates 0 cron tasks.
-0 π * * * echo "test six (1 task / 1 invalid)"
+# Invalid: Unparseable bit in parsing of command field 2: "π".
+#
+# No. primitives 0.
+#
+0 π * * * echo "0006"
 
-# Every 30 minutes.
-# Generates 1 cron task.
-*/30 * * * * echo "test seven (1 task)"
+# Run: echo "0007"
+# At: Every 30th minute of every hour of every day.
+#
+# No. primitives 1.
+#
+*/30 * * * * echo "0007"
 
-# Every 10 minutes.
-# Generates 1 cron task.
-*/10 * * * * echo "test eight (1 task)"
+# Run: echo "0008"
+# At: Every tenth minute of every hour of every day.
+#
+# No. primitives 1.
+#
+*/10 * * * * echo "0008"
 
-# At midnight, 2am, and 4am
-# Generates 3 cron tasks.
-* 0,2,4 * * * echo "test nine (3 tasks)"
+# Run: echo "0009"
+# At: Every minute of midnight, 2am, and 4am of every day.
+#
+# No. primitives 3.
+#
+* 0,2,4 * * * echo "0009"
 
-# Every 1 hour.
-# Generates 1 cron task.
-* */1 * * * echo "test ten (1 task)"
+# Run: echo "0010"
+# At: Every minute of every hour of every day.
+#
+# No. primitives 1.
+#
+* */1 * * * echo "0010"
 
-# Run Jan, Feb 31, and Aug 31. Feb 30/31 should fail. Jan/Aug 31 shouldn't.
-# Generates 6 cron task.
-* * 30,31 2,8,1 * echo "test eleven (6 tasks / 2 invalid)"
+# Run: echo "0011"
+# At: Every minute of every hour of the 30th and 31st of February, August, and January.
+#
+# No. primitives 4.
+#
+* * 30,31 2,8,1 * echo "0011"
 
-# 10th minute of every hour in October.
-# Generates 1 cron task.
-10 * * 10 * echo "test twelve (1 tasks)"
+# Run: echo "0012"
+# At: 10 minutes past every hour of every day of October.
+#
+# No. primitives 1.
+#
+10 * * 10 * echo "0012"
 
-# Null.
-# Generates 0 cron task.
-* * * * * echo "test thirteen (0 tasks / cron is null)"
+# Run: echo "0013"
+# At: Every minute of every hour of every day.
+#
+# No. primitives 1.
+#
+* * * * * echo "0013"
 
-# This runs at midnight on New Years Day (January 1st). If it's a Monday.
-# Generates 1 cron task.
-0 0 1 JAN MON echo "test fourteen happy new year! (1 task)"
+# Run: echo "0014"
+# At: Midnight on the first of -- or every Monday in -- January.
+#
+# No. primitives 2.
+#
+0 0 1 JAN MON echo "0014"
 
-# This runs at midnight on New Years Day (January 1st). If it's a Sunday.
-# Generates 1 cron task.
-0 0 1 1 SUN echo "test fifteen happy new year! (1 task)"
+# Run: echo "0015"
+# At: Midnight on the first of -- or every Sunday in -- January.
+#
+# No. primitives 2.
+#
+0 0 1 1 SUN echo "0015"
+
+# Run: echo "0016"
+# At: Every minute of every hour of every day of October.
+#
+# No. primitives 1.
+#
+* * * 10 * echo "0016"
+
+# Run: echo "0017"
+# At: Every minute of every hour of the 20th of -- or every Wednesday in -- July.
+#
+# No. primitives 2.
+#
+* * 20 7 3 echo "0017"
+
+# Run: echo "0018"
+# At: Every minute of every hour of every Thursday in June.
+#
+# No. primitives 1.
+#
+* * * 6 4 echo "0018"
